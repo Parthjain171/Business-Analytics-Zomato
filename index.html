@@ -1,37 +1,230 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Business Analytics Dashboard</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f7fb; color: #1f2937; }
-    .container { max-width: 900px; margin: auto; padding: 30px; background: white; border-radius: 16px; box-shadow: 0 18px 60px rgba(0, 0, 0, 0.08); }
-    h1 { font-size: 2.4rem; margin-bottom: 12px; }
-    p { font-size: 1rem; line-height: 1.8; color: #4b5563; }
-    .links { margin-top: 28px; }
-    .card { padding: 24px; margin-bottom: 18px; border: 1px solid #e5e7eb; border-radius: 14px; background: #f9fafb; }
-    a { color: #2563eb; text-decoration: none; font-weight: 600; }
-    a:hover { text-decoration: underline; }
-    code { background: #eef2ff; padding: 2px 6px; border-radius: 6px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Analytics Dashboard</title>
+    <!-- Modern Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563EB; /* Clean, modern blue */
+            --primary-hover: #1D4ED8;
+            --bg: #F3F4F6; /* Soft light gray */
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --accent-1: #10B981; /* Green */
+            --accent-2: #8B5CF6; /* Purple */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
+            flex: 1;
+            width: 100%;
+        }
+
+        /* Header Section */
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Dashboard Cards Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(229, 231, 235, 0.6);
+        }
+
+        /* Top colored accent line on cards */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .card.customer::before {
+            background-color: var(--accent-1);
+        }
+
+        .card.financial::before {
+            background-color: var(--accent-2);
+        }
+
+        /* Card Hover Effects */
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: transparent;
+        }
+
+        /* Card Content */
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: 16px;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            flex-grow: 1;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 1.05rem;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2.5rem;
+            background-color: transparent;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            header h1 { font-size: 2.25rem; }
+            header p { font-size: 1.1rem; }
+            .container { padding: 3rem 1.5rem; }
+            .card { padding: 2rem; }
+            .grid { gap: 1.5rem; }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Business Analytics Dashboard</h1>
-    <p>Welcome to your live analytics project homepage. Use this page to open your dashboards and explore the main reports in the repository.</p>
-    <div class="card">
-      <h2>Available Dashboards</h2>
-      <div class="links">
-        <p><a href="dashboard/customer_dashboard.html" target="_blank">Customer Dashboard</a></p>
-        <p><a href="dashboard/financial_dashboard.html" target="_blank">Financial Dashboard</a></p>
-      </div>
+
+    <div class="container">
+        <header>
+            <h1>Business Analytics Platform</h1>
+            <p>A comprehensive overview of retail performance and market financial indicators, powered by interactive data visualizations.</p>
+        </header>
+
+        <div class="grid">
+            <!-- Customer Analytics Card -->
+            <div class="card customer">
+                <div class="card-icon">🛍️</div>
+                <h2>Customer Analytics</h2>
+                <p>Explore retail performance metrics including sales distribution by region, monthly revenue trends, and product category breakdowns.</p>
+                <a href="dashboard/customer_dashboard.html" class="btn">View Dashboard</a>
+            </div>
+
+            <!-- Financial Analytics Card -->
+            <div class="card financial">
+                <div class="card-icon">📈</div>
+                <h2>Financial Analytics</h2>
+                <p>Track AAPL stock performance over the last 12 months. Includes daily close prices, 50-day & 100-day moving averages, and trading volumes.</p>
+                <a href="dashboard/financial_dashboard.html" class="btn">View Dashboard</a>
+            </div>
+        </div>
     </div>
-    <div class="card">
-      <h2>Repository Notes</h2>
-      <p>This page is served from the repository root as <code>index.html</code>. If you want GitHub Pages to display this link, your Pages source should be set to the <strong>main</strong> branch and <strong>/ (root)</strong> folder.</p>
-      <p>If you add more reports, keep them inside the <code>dashboard/</code> folder and link them from this file.</p>
-    </div>
-  </div>
+
+    <footer>
+        <p>Built with Python, Plotly, and yfinance</p>
+    </footer>
+
 </body>
 </html>
