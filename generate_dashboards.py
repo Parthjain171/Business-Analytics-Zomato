@@ -115,7 +115,9 @@ fig_customer = make_subplots(
     subplot_titles=('Sales by Category', 'Sales Distribution by Region',
                     'Monthly Sales Trend', 'Quantity by Category'),
     specs=[[{'type': 'bar'}, {'type': 'pie'}],
-           [{'type': 'scatter'}, {'type': 'bar'}]]
+           [{'type': 'scatter'}, {'type': 'bar'}]],
+    vertical_spacing=0.15,
+    horizontal_spacing=0.1
 )
 
 # Add traces manually with proper data
@@ -159,10 +161,11 @@ fig_customer.update_yaxes(title_text="Quantity", row=2, col=2)
 
 fig_customer.update_layout(
     title_text="📈 Customer Analytics Dashboard",
-    height=1000,
+    height=900,
     showlegend=False,
     template='plotly_white',
-    font=dict(size=11)
+    font=dict(size=12, family="Inter, Arial, sans-serif"),
+    margin=dict(l=50, r=50, t=100, b=50)
 )
 
 # Export Customer Dashboard
