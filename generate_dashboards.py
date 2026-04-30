@@ -18,6 +18,119 @@ os.makedirs('dashboard', exist_ok=True)
 print("🚀 Starting Business Analytics Dashboard Generation...")
 
 # ============================================================================
+# HTML TEMPLATE ENGINE
+# ============================================================================
+def generate_html_page(title, active_page, kpis_html, chart_html):
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {{
+            --primary: #2563EB;
+            --bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --sidebar-bg: #111827;
+            --sidebar-hover: #1F2937;
+        }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }}
+        body {{ background-color: var(--bg); color: var(--text-main); display: flex; min-height: 100vh; }}
+        
+        /* Sidebar */
+        .sidebar {{
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: white;
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }}
+        .sidebar h2 {{ font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; color: white; display: flex; align-items: center; gap: 10px; }}
+        .sidebar a {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #9CA3AF;
+            text-decoration: none;
+            padding: 0.875rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: 0.2s;
+        }}
+        .sidebar a:hover {{ background-color: var(--sidebar-hover); color: white; }}
+        .sidebar a.active {{ background-color: var(--primary); color: white; }}
+        
+        /* Main Content */
+        .main-content {{
+            margin-left: 260px;
+            padding: 2.5rem 3rem;
+            width: calc(100% - 260px);
+        }}
+        .header {{ margin-bottom: 2rem; }}
+        .header h1 {{ font-size: 2rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.025em; }}
+        
+        /* KPIs */
+        .kpi-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }}
+        .kpi-card {{
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+            transition: transform 0.2s;
+        }}
+        .kpi-card:hover {{ transform: translateY(-3px); }}
+        .kpi-title {{ font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; font-weight: 600; }}
+        .kpi-value {{ font-size: 2rem; font-weight: 700; color: var(--text-main); }}
+        
+        /* Chart Container */
+        .chart-container {{
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }}
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>📊 Analytics Pro</h2>
+        <a href="../index.html">🏠 Home</a>
+        <a href="customer_dashboard.html" class="{'active' if active_page == 'customer' else ''}">🛍️ Customer Analytics</a>
+        <a href="financial_dashboard.html" class="{'active' if active_page == 'financial' else ''}">📈 Financial Analytics</a>
+    </div>
+    
+    <div class="main-content">
+        <div class="header">
+            <h1>{title}</h1>
+        </div>
+        
+        <div class="kpi-grid">
+            {kpis_html}
+        </div>
+        
+        <div class="chart-container">
+            {chart_html}
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+# ============================================================================
 # 1. CUSTOMER ANALYTICS DASHBOARD
 # ============================================================================
 print("\n📊 Generating Customer Analytics Dashboard...")
@@ -26,7 +139,6 @@ print("\n📊 Generating Customer Analytics Dashboard...")
 np.random.seed(42)
 num_records = 1000
 
-# Create sample data
 categories = ['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books']
 regions = ['North', 'South', 'East', 'West', 'Central']
 dates = pd.date_range(start='2023-01-01', end='2024-01-01', freq='D')
@@ -49,67 +161,18 @@ sales_trend = df.groupby(df['Date'].dt.to_period('M'))['Sales'].sum().reset_inde
 sales_trend['Date'] = sales_trend['Date'].astype(str)
 quantity_by_category = df.groupby('Category')['Quantity'].sum().sort_values(ascending=False)
 
-# Create individual figures for better rendering
-fig1 = go.Figure(data=[
-    go.Bar(x=sales_by_category.index, y=sales_by_category.values,
-           marker_color=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A'],
-           text=sales_by_category.values.round(0),
-           textposition='auto')
-])
-fig1.update_layout(
-    title='Sales by Category',
-    xaxis_title='Category',
-    yaxis_title='Total Sales ($)',
-    template='plotly_white',
-    height=400,
-    hovermode='x unified'
-)
+# Build KPIs
+total_sales_kpi = f"${df['Sales'].sum():,.0f}"
+total_orders_kpi = f"{len(df):,}"
+top_category_kpi = sales_by_category.index[0]
 
-fig2 = go.Figure(data=[
-    go.Pie(labels=sales_by_region.index, values=sales_by_region.values,
-           marker=dict(colors=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A']))
-])
-fig2.update_layout(
-    title='Sales Distribution by Region',
-    template='plotly_white',
-    height=400
-)
+customer_kpis = f"""
+<div class="kpi-card"><div class="kpi-title">Total Revenue</div><div class="kpi-value" style="color: #10B981;">{total_sales_kpi}</div></div>
+<div class="kpi-card"><div class="kpi-title">Total Orders</div><div class="kpi-value">{total_orders_kpi}</div></div>
+<div class="kpi-card"><div class="kpi-title">Top Category</div><div class="kpi-value">{top_category_kpi}</div></div>
+"""
 
-fig3 = go.Figure(data=[
-    go.Scatter(x=sales_trend['Date'], y=sales_trend['Sales'],
-               mode='lines+markers',
-               line=dict(color='#00CC96', width=3),
-               marker=dict(size=8),
-               fill='tozeroy',
-               fillcolor='rgba(0, 204, 150, 0.2)')
-])
-fig3.update_layout(
-    title='Monthly Sales Trend',
-    xaxis_title='Month',
-    yaxis_title='Total Sales ($)',
-    template='plotly_white',
-    height=400,
-    hovermode='x unified'
-)
-
-fig4 = go.Figure(data=[
-    go.Bar(x=quantity_by_category.index, y=quantity_by_category.values,
-           marker_color='#EF553B',
-           text=quantity_by_category.values.round(0),
-           textposition='auto')
-])
-fig4.update_layout(
-    title='Total Quantity Sold by Category',
-    xaxis_title='Category',
-    yaxis_title='Quantity',
-    template='plotly_white',
-    height=400,
-    hovermode='x unified'
-)
-
-# Combine all figures into one dashboard
-from plotly.subplots import make_subplots
-
+# Create Plotly Dashboard
 fig_customer = make_subplots(
     rows=2, cols=2,
     subplot_titles=('Sales by Category', 'Sales Distribution by Region',
@@ -120,37 +183,10 @@ fig_customer = make_subplots(
     horizontal_spacing=0.1
 )
 
-# Add traces manually with proper data
-fig_customer.add_trace(
-    go.Bar(x=sales_by_category.index, y=sales_by_category.values,
-           marker_color=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A'],
-           name='Sales', showlegend=False),
-    row=1, col=1
-)
-
-fig_customer.add_trace(
-    go.Pie(labels=sales_by_region.index, values=sales_by_region.values,
-           marker=dict(colors=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A']),
-           name='Region', showlegend=False),
-    row=1, col=2
-)
-
-fig_customer.add_trace(
-    go.Scatter(x=sales_trend['Date'], y=sales_trend['Sales'],
-               mode='lines+markers',
-               line=dict(color='#00CC96', width=3),
-               marker=dict(size=6),
-               fill='tozeroy',
-               name='Sales', showlegend=False),
-    row=2, col=1
-)
-
-fig_customer.add_trace(
-    go.Bar(x=quantity_by_category.index, y=quantity_by_category.values,
-           marker_color='#EF553B',
-           name='Quantity', showlegend=False),
-    row=2, col=2
-)
+fig_customer.add_trace(go.Bar(x=sales_by_category.index, y=sales_by_category.values, marker_color=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A'], name='Sales', showlegend=False), row=1, col=1)
+fig_customer.add_trace(go.Pie(labels=sales_by_region.index, values=sales_by_region.values, marker=dict(colors=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A']), name='Region', showlegend=False), row=1, col=2)
+fig_customer.add_trace(go.Scatter(x=sales_trend['Date'], y=sales_trend['Sales'], mode='lines+markers', line=dict(color='#00CC96', width=3), marker=dict(size=6), fill='tozeroy', name='Sales', showlegend=False), row=2, col=1)
+fig_customer.add_trace(go.Bar(x=quantity_by_category.index, y=quantity_by_category.values, marker_color='#EF553B', name='Quantity', showlegend=False), row=2, col=2)
 
 fig_customer.update_xaxes(title_text="Category", row=1, col=1)
 fig_customer.update_yaxes(title_text="Sales ($)", row=1, col=1)
@@ -160,258 +196,132 @@ fig_customer.update_xaxes(title_text="Category", row=2, col=2)
 fig_customer.update_yaxes(title_text="Quantity", row=2, col=2)
 
 fig_customer.update_layout(
-    title_text="📈 Customer Analytics Dashboard",
-    height=900,
+    height=800,
     showlegend=False,
     template='plotly_white',
     font=dict(size=12, family="Inter, Arial, sans-serif"),
-    margin=dict(l=50, r=50, t=100, b=50)
+    margin=dict(l=40, r=40, t=60, b=40)
 )
 
-# Export Customer Dashboard
+# Render HTML
+customer_chart_html = fig_customer.to_html(full_html=False, include_plotlyjs='cdn')
+customer_full_html = generate_html_page("Customer Analytics", "customer", customer_kpis, customer_chart_html)
+
 customer_html_path = 'dashboard/customer_dashboard.html'
-fig_customer.write_html(customer_html_path)
+with open(customer_html_path, "w", encoding="utf-8") as f:
+    f.write(customer_full_html)
 print(f"✅ Customer Analytics Dashboard saved to: {customer_html_path}")
 
 # ============================================================================
-# 2. FINANCIAL ANALYTICS DASHBOARD (FIXED & DEMO-READY)
+# 2. FINANCIAL ANALYTICS DASHBOARD
 # ============================================================================
 print("\n📊 Generating Financial Analytics Dashboard...")
 
 try:
     print("   Fetching AAPL stock data from Yahoo Finance...")
-    
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365)
 
-    # Fetch data (NO silent failure)
     try:
-        # For newer yfinance versions
         aapl_data = yf.download('AAPL', start=start_date, end=end_date, multi_level_index=False, progress=False)
     except TypeError:
-        # Fallback for older yfinance versions
         aapl_data = yf.download('AAPL', start=start_date, end=end_date, progress=False)
 
     if aapl_data is None or aapl_data.empty:
         raise ValueError("No data received from Yahoo Finance")
 
-    # Fix MultiIndex columns if present (safely handle various yfinance output formats)
     if isinstance(aapl_data.columns, pd.MultiIndex):
-        # Flatten by getting the top level, or taking the price name if it's the second level
         levels = aapl_data.columns.levels
         if 'Close' in levels[0]:
             aapl_data.columns = aapl_data.columns.get_level_values(0)
         elif len(levels) > 1 and 'Close' in levels[1]:
             aapl_data.columns = aapl_data.columns.get_level_values(1)
         else:
-            # Fallback string flattening
             aapl_data.columns = [col[0] if isinstance(col, tuple) else col for col in aapl_data.columns]
 
     aapl_data = aapl_data.reset_index()
     
-    # Rename index to Date if necessary
     if 'Date' not in aapl_data.columns and 'Datetime' in aapl_data.columns:
         aapl_data = aapl_data.rename(columns={'Datetime': 'Date'})
     elif 'Date' not in aapl_data.columns and 'index' in aapl_data.columns:
         aapl_data = aapl_data.rename(columns={'index': 'Date'})
 
-    # Ensure correct columns exist
     required_cols = ['Date', 'Close', 'Volume']
     for col in required_cols:
         if col not in aapl_data.columns:
             raise ValueError(f"Missing column: {col}")
 
-    # Clean data: only select relevant columns first to avoid dropping rows due to unrelated NaNs
     aapl_data = aapl_data[['Date', 'Close', 'Volume']].copy()
     aapl_data['Date'] = pd.to_datetime(aapl_data['Date'])
     aapl_data['Close'] = pd.to_numeric(aapl_data['Close'], errors='coerce')
     aapl_data['Volume'] = pd.to_numeric(aapl_data['Volume'], errors='coerce')
-
     aapl_data = aapl_data.dropna()
 
-    # Ensure sufficient data
     if len(aapl_data) < 100:
         raise ValueError(f"Too few data points: {len(aapl_data)}")
 
     print(f"   Downloaded {len(aapl_data)} trading days")
 
-    # Moving averages (correct way: avoids misleading early values by leaving them as NaN)
     aapl_data['MA50'] = aapl_data['Close'].rolling(window=50).mean()
     aapl_data['MA100'] = aapl_data['Close'].rolling(window=100).mean()
 
-    # Create subplot: shared_xaxes prevents duplication, properly proportioned
+    # Build Financial KPIs
+    current_price = aapl_data['Close'].iloc[-1]
+    prev_price = aapl_data['Close'].iloc[-2]
+    price_change = current_price - prev_price
+    change_color = "#10B981" if price_change >= 0 else "#EF4444"
+    price_display = f"${current_price:.2f} <span style='font-size:1.1rem;color:{change_color}'>({'%+.2f' % price_change})</span>"
+    avg_vol = f"{aapl_data['Volume'].mean():,.0f}"
+    
+    financial_kpis = f"""
+    <div class="kpi-card" style="border-left-color: {change_color};"><div class="kpi-title">AAPL Current Price</div><div class="kpi-value">{price_display}</div></div>
+    <div class="kpi-card"><div class="kpi-title">Avg Daily Volume</div><div class="kpi-value">{avg_vol}</div></div>
+    <div class="kpi-card"><div class="kpi-title">Trading Days Tracked</div><div class="kpi-value">{len(aapl_data)}</div></div>
+    """
+
     fig_financial = make_subplots(
-        rows=2, cols=1,
-        shared_xaxes=True,
+        rows=2, cols=1, shared_xaxes=True,
         subplot_titles=('AAPL Stock Price with Moving Averages', 'Trading Volume'),
-        vertical_spacing=0.08,
-        row_heights=[0.75, 0.25]
+        vertical_spacing=0.08, row_heights=[0.75, 0.25]
     )
 
-    # Price line
-    fig_financial.add_trace(
-        go.Scatter(
-            x=aapl_data['Date'],
-            y=aapl_data['Close'],
-            mode='lines',
-            name='Close Price',
-            line=dict(color='#1f77b4', width=2.5)
-        ),
-        row=1, col=1
-    )
+    fig_financial.add_trace(go.Scatter(x=aapl_data['Date'], y=aapl_data['Close'], mode='lines', name='Close Price', line=dict(color='#1f77b4', width=2.5)), row=1, col=1)
+    fig_financial.add_trace(go.Scatter(x=aapl_data['Date'], y=aapl_data['MA50'], mode='lines', name='50-Day MA', line=dict(color='#ff7f0e', width=2, dash='dash')), row=1, col=1)
+    fig_financial.add_trace(go.Scatter(x=aapl_data['Date'], y=aapl_data['MA100'], mode='lines', name='100-Day MA', line=dict(color='#2ca02c', width=2, dash='dot')), row=1, col=1)
 
-    # MA50
-    fig_financial.add_trace(
-        go.Scatter(
-            x=aapl_data['Date'],
-            y=aapl_data['MA50'],
-            mode='lines',
-            name='50-Day MA',
-            line=dict(color='#ff7f0e', width=2, dash='dash')
-        ),
-        row=1, col=1
-    )
+    colors = ['#EF4444' if aapl_data.iloc[i]['Close'] < aapl_data.iloc[i-1]['Close'] else '#10B981' for i in range(len(aapl_data))]
+    colors[0] = '#10B981'
+    fig_financial.add_trace(go.Bar(x=aapl_data['Date'], y=aapl_data['Volume'], name='Volume', marker_color=colors, opacity=0.8), row=2, col=1)
 
-    # MA100
-    fig_financial.add_trace(
-        go.Scatter(
-            x=aapl_data['Date'],
-            y=aapl_data['MA100'],
-            mode='lines',
-            name='100-Day MA',
-            line=dict(color='#2ca02c', width=2, dash='dot')
-        ),
-        row=1, col=1
-    )
-
-    # Volume bars
-    colors = ['#d62728' if aapl_data.iloc[i]['Close'] < aapl_data.iloc[i-1]['Close'] else '#2ca02c' 
-              for i in range(len(aapl_data))]
-    colors[0] = '#2ca02c' # First day fallback
-
-    fig_financial.add_trace(
-        go.Bar(
-            x=aapl_data['Date'],
-            y=aapl_data['Volume'],
-            name='Volume',
-            marker_color=colors,
-            opacity=0.8
-        ),
-        row=2, col=1
-    )
-
-    # Layout improvements (IMPORTANT)
     fig_financial.update_layout(
-        title="💹 Financial Analytics Dashboard - AAPL (Last 12 Months)",
-        height=900,
+        height=750,
         template='plotly_white',
         hovermode='x unified',
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         font=dict(size=12, family="Inter, Arial, sans-serif"),
-        margin=dict(l=50, r=50, t=100, b=50)
+        margin=dict(l=40, r=40, t=60, b=40)
     )
 
-    # Axis labels
     fig_financial.update_yaxes(title_text="Price (USD)", row=1, col=1)
     fig_financial.update_yaxes(title_text="Volume", row=2, col=1)
-    
-    # 🔥 RANGE SLIDER (properly configured so it doesn't compress the chart)
-    fig_financial.update_layout(
-        xaxis2=dict(
-            title_text="Date",
-            rangeslider=dict(
-                visible=True,
-                thickness=0.08, # Keeps slider small to avoid vertical squash
-                bgcolor="#F3F4F6"
-            ),
-            type="date"
-        )
-    )
-
-    # Remove rangeslider from top chart explicitly just in case
+    fig_financial.update_layout(xaxis2=dict(title_text="Date", rangeslider=dict(visible=True, thickness=0.08, bgcolor="#F3F4F6"), type="date"))
     fig_financial.update_xaxes(rangeslider_visible=False, row=1, col=1)
 
-    # Export
-    financial_html_path = 'dashboard/financial_dashboard.html'
-    fig_financial.write_html(financial_html_path)
+    fin_chart_html = fig_financial.to_html(full_html=False, include_plotlyjs='cdn')
+    fin_full_html = generate_html_page("Financial Analytics", "financial", financial_kpis, fin_chart_html)
 
+    financial_html_path = 'dashboard/financial_dashboard.html'
+    with open(financial_html_path, "w", encoding="utf-8") as f:
+        f.write(fin_full_html)
     print(f"✅ Financial Dashboard saved to: {financial_html_path}")
 
 except Exception as e:
     print(f"⚠️ Error: {e}")
     print("   Using fallback synthetic data...")
-
-    # Fallback data
-    dates = pd.date_range(start='2023-01-01', periods=300)
-    prices = np.cumsum(np.random.randn(len(dates))) + 150
-    volumes = np.random.randint(50_000_000, 100_000_000, len(dates))
-
-    fallback_data = pd.DataFrame({
-        'Date': dates,
-        'Close': prices,
-        'Volume': volumes
-    })
-
-    fallback_data['MA50'] = fallback_data['Close'].rolling(50).mean()
-    fallback_data['MA100'] = fallback_data['Close'].rolling(100).mean()
-
-    fig_financial = make_subplots(
-        rows=2, cols=1,
-        shared_xaxes=True,
-        subplot_titles=('Synthetic Stock Price (Fallback)', 'Trading Volume'),
-        vertical_spacing=0.08,
-        row_heights=[0.75, 0.25]
-    )
-
-    fig_financial.add_trace(
-        go.Scatter(x=fallback_data['Date'], y=fallback_data['Close'], name='Close Price', line=dict(color='#1f77b4', width=2.5)),
-        row=1, col=1
-    )
-
-    fig_financial.add_trace(
-        go.Scatter(x=fallback_data['Date'], y=fallback_data['MA50'], name='50-Day MA', line=dict(color='#ff7f0e', width=2, dash='dash')),
-        row=1, col=1
-    )
-
-    fig_financial.add_trace(
-        go.Scatter(x=fallback_data['Date'], y=fallback_data['MA100'], name='100-Day MA', line=dict(color='#2ca02c', width=2, dash='dot')),
-        row=1, col=1
-    )
-
-    fig_financial.add_trace(
-        go.Bar(x=fallback_data['Date'], y=fallback_data['Volume'], name='Volume', marker_color='#8c564b', opacity=0.8),
-        row=2, col=1
-    )
-
-    fig_financial.update_layout(
-        title="💹 Financial Dashboard (Fallback Data)",
-        height=900,
-        template='plotly_white',
-        hovermode='x unified',
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-
-    fig_financial.update_yaxes(title_text="Price (USD)", row=1, col=1)
-    fig_financial.update_yaxes(title_text="Volume", row=2, col=1)
-    
-    fig_financial.update_layout(
-        xaxis2=dict(
-            title_text="Date",
-            rangeslider=dict(visible=True, thickness=0.08, bgcolor="#F3F4F6"),
-            type="date"
-        )
-    )
-    fig_financial.update_xaxes(rangeslider_visible=False, row=1, col=1)
-
+    # Minimal fallback just to keep it running
     financial_html_path = 'dashboard/financial_dashboard.html'
-    fig_financial.write_html(financial_html_path)
-
+    with open(financial_html_path, "w", encoding="utf-8") as f:
+        f.write("<h1>Error loading financial data</h1>")
     print(f"✅ Fallback dashboard saved to: {financial_html_path}")
 
 # ============================================================================
@@ -420,12 +330,6 @@ except Exception as e:
 print("\n" + "="*70)
 print("🎉 DASHBOARD GENERATION COMPLETE!")
 print("="*70)
-print(f"\n📁 Generated Files:")
-print(f"   1. {customer_html_path}")
-print(f"   2. {financial_html_path}")
 print(f"\n🌐 To view dashboards:")
 print(f"   - Open the HTML files directly in your browser")
-print(f"   - Or access via GitHub Pages at:")
-print(f"     https://parthjain171.github.io/Business-Analytics-Zomato/")
-print(f"\n💡 Both dashboards are fully standalone and require no external dependencies!")
 print("="*70)
